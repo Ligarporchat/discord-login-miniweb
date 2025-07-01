@@ -1,28 +1,36 @@
 import { google } from 'googleapis';
 
 export default async function handler(req, res) {
+  console.log("API /api/save-user llamada");
+  
   if (req.method !== 'POST') {
+    console.log("Método no permitido:", req.method);
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
   const { email, discord_id, username } = req.body;
+  console.log("Datos recibidos:", { email, discord_id, username });
 
   if (!email || !discord_id || !username) {
+    console.log("Faltan datos obligatorios");
     return res.status(400).json({ error: 'Faltan datos obligatorios' });
   }
 
   try {
+    // Autenticación con Google Sheets
     const auth = new google.auth.GoogleAuth({
       credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON),
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
+
     const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
-    const range = 'Sheet1!A:D'; // Ajusta el nombre de tu hoja si no es Sheet1
+    const range = 'Hoja1!A:D'; // Cambia 'Hoja1' si tu hoja tiene otro nombre
 
     const fecha = new Date().toISOString();
 
+    console.log("Añadiendo fila a Google Sheets...");
     await sheets.spreadsheets.values.append({
       spreadsheetId,
       range,
@@ -32,7 +40,11 @@ export default async function handler(req, res) {
       },
     });
 
+    console.log("Fila añadida correctamente");
+
+    // Llamar al endpoint del bot para asignar rol (si existe)
     if (process.env.BOT_ASSIGN_ROLE_URL) {
+      console.log("Asignando rol...");
       const assignRoleResponse = await fetch(process.env.BOT_ASSIGN_ROLE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -42,11 +54,12 @@ export default async function handler(req, res) {
       if (!assignRoleResponse.ok) {
         throw new Error('No se pudo asignar rol');
       }
+      console.log("Rol asignado correctamente");
     }
 
     res.status(200).json({ success: true, message: 'Usuario guardado y rol asignado' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+    console.error("Error en /api/save-user:", error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 }
