@@ -6,7 +6,7 @@ export default function Home() {
 
   useEffect(() => {
     if (session) {
-      // Aquí llamamos a la API para guardar usuario y asignar rol
+      // 1. Guardar usuario y asignar rol
       fetch('/api/save-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -19,8 +19,36 @@ export default function Home() {
       .then(res => res.json())
       .then(data => console.log('Usuario guardado y rol asignado:', data))
       .catch(err => console.error('Error:', err));
+
+      // 2. Comprobar si está en servidor y asignar/invitar
+      handleCheckDiscord(session.user.id);
     }
   }, [session]);
+
+  const handleCheckDiscord = async (discord_id) => {
+    try {
+      const response = await fetch('/api/check-and-invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ discord_id }),
+      });
+
+      const data = await response.json();
+
+      if (data.status === 'joined') {
+        alert('✅ Ya estabas en el servidor. Se te ha asignado el rol.');
+      } else if (data.status === 'not_in_server') {
+        alert('🔗 Aún no estás en el servidor. Vamos a invitarte...');
+        window.location.href = data.invite_url;
+      } else {
+        alert('⚠️ Algo salió mal: ' + (data.error || 'Error desconocido'));
+      }
+    } catch (err) {
+      alert('❌ Error al conectar con el servidor: ' + err.message);
+    }
+  };
 
   if (!session) {
     return (
