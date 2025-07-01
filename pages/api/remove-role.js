@@ -3,14 +3,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Only POST allowed' });
   }
 
-  // Verifica autorización
-  const authHeader = req.headers.authorization;
-  const expectedToken = process.env.INTERNAL_API_KEY;
-
-  if (!authHeader || authHeader !== `Bearer ${expectedToken}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
   const { discord_id } = req.body;
 
   if (!discord_id) {
@@ -25,7 +17,7 @@ export default async function handler(req, res) {
     const url = `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discord_id}/roles/${ROLE_ID}`;
 
     const response = await fetch(url, {
-      method: 'PUT',
+      method: 'DELETE',
       headers: {
         'Authorization': `Bot ${BOT_TOKEN}`,
         'Content-Type': 'application/json',
@@ -33,7 +25,7 @@ export default async function handler(req, res) {
     });
 
     if (response.ok) {
-      res.status(200).json({ success: true, message: 'Role assigned successfully.' });
+      res.status(200).json({ success: true, message: 'Role removed successfully.' });
     } else {
       const errorText = await response.text();
       res.status(response.status).json({ error: errorText });

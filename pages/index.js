@@ -40,7 +40,6 @@ export default function Home() {
       if (data.status === 'joined') {
         alert('✅ Ya estabas en el servidor. Se te ha asignado el rol.');
       } else if (data.status === 'not_in_server') {
-        alert('🔗 Aún no estás en el servidor. Vamos a invitarte...');
         window.location.href = data.invite_url;
       } else {
         alert('⚠️ Algo salió mal: ' + (data.error || 'Error desconocido'));

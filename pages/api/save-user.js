@@ -2,7 +2,7 @@ import { google } from 'googleapis';
 
 export default async function handler(req, res) {
   console.log("API /api/save-user llamada");
-  
+
   if (req.method !== 'POST') {
     console.log("Método no permitido:", req.method);
     return res.status(405).json({ error: 'Método no permitido' });
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     const sheets = google.sheets({ version: 'v4', auth });
 
     const spreadsheetId = process.env.GOOGLE_SHEETS_ID;
-    const range = 'Hoja1!A:D'; // Cambia 'Hoja1' si tu hoja tiene otro nombre
+    const range = 'Hoja1!A:D'; // Ajusta si tu hoja se llama diferente
 
     const fecha = new Date().toISOString();
 
@@ -42,12 +42,16 @@ export default async function handler(req, res) {
 
     console.log("Fila añadida correctamente");
 
-    // Intentamos asignar rol, pero si falla, mostramos error con detalles
+    // Intentamos asignar rol
     if (process.env.BOT_ASSIGN_ROLE_URL) {
       console.log("Asignando rol...");
+
       const assignRoleResponse = await fetch(process.env.BOT_ASSIGN_ROLE_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.INTERNAL_API_KEY}`, // Token de seguridad
+        },
         body: JSON.stringify({ discord_id }),
       });
 
@@ -56,6 +60,7 @@ export default async function handler(req, res) {
         console.error("Error asignando rol:", errorText);
         return res.status(500).json({ error: 'No se pudo asignar rol', details: errorText });
       }
+
       console.log("Rol asignado correctamente");
     }
 
