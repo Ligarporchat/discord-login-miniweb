@@ -12,6 +12,7 @@ export default async function handler(req, res) {
   const BOT_TOKEN = process.env.BOT_TOKEN;
   const GUILD_ID = process.env.GUILD_ID;
   const ROLE_ID = process.env.ROLE_ID; // “Alumno Mastermind”
+  const CHANNEL_ID = '1388392012226498674'; // Canal con permisos
 
   try {
     // 1. Verificar si el usuario está en el servidor
@@ -35,8 +36,8 @@ export default async function handler(req, res) {
     }
 
     if (memberRes.status === 404) {
-      // Usuario NO está en el servidor → crear invitación
-      const inviteRes = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/invites`, {
+      // Usuario NO está en el servidor → crear invitación en canal forzado
+      const inviteRes = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/invites`, {
         method: 'POST',
         headers: {
           Authorization: `Bot ${BOT_TOKEN}`,
@@ -61,7 +62,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // Si da otro error
     return res.status(500).json({ error: 'Error inesperado', status: memberRes.status });
 
   } catch (err) {
