@@ -42,7 +42,7 @@ export default async function handler(req, res) {
 
     console.log("Fila añadida correctamente");
 
-    // Llamar al endpoint del bot para asignar rol (si existe)
+    // Intentamos asignar rol, pero si falla, mostramos error con detalles
     if (process.env.BOT_ASSIGN_ROLE_URL) {
       console.log("Asignando rol...");
       const assignRoleResponse = await fetch(process.env.BOT_ASSIGN_ROLE_URL, {
@@ -52,7 +52,9 @@ export default async function handler(req, res) {
       });
 
       if (!assignRoleResponse.ok) {
-        throw new Error('No se pudo asignar rol');
+        const errorText = await assignRoleResponse.text();
+        console.error("Error asignando rol:", errorText);
+        return res.status(500).json({ error: 'No se pudo asignar rol', details: errorText });
       }
       console.log("Rol asignado correctamente");
     }
